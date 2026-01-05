@@ -1,6 +1,6 @@
 # Chordvery V0 Specification
 
-A TUI chord discovery tool with MIDI input, binary tree progression suggestions, and a piano keyboard visualization.
+A TUI chord discovery tool with MIDI input, binary tree progression suggestions, and piano keyboard visualization.
 
 ---
 
@@ -439,10 +439,10 @@ fn main() -> Result<()> {
 │  └────────────────────────────────┘  └───────────────────────┘  │
 │                                                                 │
 │  ┌─ Piano ───────────────────────────────────────────────────┐  │
-│  │ ║ █ █ ║ █ █ █ ║ █ █ ║ █ █ █ ║ █ █ ║ █ █ █ ║              │  │
-│  │ ║▓█▓█▓║▓█▓█▓█▓║ █ █ ║ █ █ █ ║ █ █ ║ █ █ █ ║              │  │
-│  │ ║▓║▓║▓║▓║▓║▓║▓║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║              │  │
-│  │ ╚═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╝              │  │
+│  │ ║ █ █ ║ █ █ █ ║ █ █ ║ █ █ █ ║ █ █ ║ █ █ █ ║               │  │
+│  │ ║▓█▓█▓║▓█▓█▓█▓║ █ █ ║ █ █ █ ║ █ █ ║ █ █ █ ║               │  │
+│  │ ║▓║▓║▓║▓║▓║▓║▓║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║ ║               │  │
+│  │ ╚═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╩═╝               │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  [Tab] Mode: Discovery │ Playing: C major │ [e] Extended │ [?]  │
