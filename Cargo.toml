@@ -1,0 +1,23 @@
+[package]
+name = "chordvery"
+version = "0.1.0"
+edition = "2021"
+description = "TUI chord finder with MIDI input and progression suggestions"
+license = "MIT"
+
+[dependencies]
+# Terminal UI
+ratatui = "0.29"
+crossterm = "0.28"
+
+# MIDI
+midir = "0.10"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Utilities
+anyhow = "1.0"
+thiserror = "2"
+
+[dev-dependencies]
