@@ -10,7 +10,7 @@ use ratatui::{
 };
 
 use crate::midi::MidiInput;
-use crate::theory::{Chord, Note, ProgressionTree};
+use crate::theory::{substitutions_for, Chord, Note, ProgressionTree};
 use crate::ui::components::{ChordHistory, ChordTree, Piano};
 use crate::ui::theme::Theme;
 
@@ -37,6 +37,7 @@ pub struct App {
     pub tree: ProgressionTree,
     pub should_quit: bool,
     pub extended_chords: bool,
+    pub show_substitutions: bool,
     pub show_help: bool,
     key: Option<Note>,
     last_notes: HashSet<u8>,
@@ -58,6 +59,7 @@ impl App {
             tree: ProgressionTree::new(),
             should_quit: false,
             extended_chords: false,
+            show_substitutions: true, // On by default for learning
             show_help: false,
             key: None,
             last_notes: HashSet::new(),
@@ -85,6 +87,10 @@ impl App {
     pub fn toggle_extended(&mut self) {
         self.extended_chords = !self.extended_chords;
         self.tree.set_extended(self.extended_chords);
+    }
+
+    pub fn toggle_substitutions(&mut self) {
+        self.show_substitutions = !self.show_substitutions;
     }
 
     pub fn toggle_help(&mut self) {
@@ -121,6 +127,7 @@ impl App {
             KeyCode::Char('q') | KeyCode::Esc => self.should_quit = true,
             KeyCode::Tab => self.toggle_mode(),
             KeyCode::Char('e') => self.toggle_extended(),
+            KeyCode::Char('s') => self.toggle_substitutions(),
             KeyCode::Char('?') => self.toggle_help(),
             KeyCode::Char('c') => {
                 self.history.clear();
@@ -180,7 +187,15 @@ impl App {
 
         if let Some(chord) = &self.current_chord {
             let node = self.tree.suggest(chord, self.key);
-            let tree_widget = ChordTree::new().root(node);
+            let subs = if self.show_substitutions {
+                substitutions_for(chord, self.key.unwrap_or(chord.root))
+            } else {
+                Vec::new()
+            };
+            let tree_widget = ChordTree::new()
+                .root(node)
+                .substitutions(subs)
+                .show_substitutions(self.show_substitutions);
             frame.render_widget(tree_widget, inner);
         } else {
             let tree_widget = ChordTree::new();
@@ -228,6 +243,7 @@ impl App {
             .unwrap_or_else(|| "—".to_string());
 
         let extended_text = if self.extended_chords { "ON" } else { "OFF" };
+        let subs_text = if self.show_substitutions { "ON" } else { "OFF" };
 
         let status = Line::from(vec![
             Span::styled(" [Tab] ", Theme::help_key()),
@@ -238,8 +254,12 @@ impl App {
             Span::styled(&chord_text, Theme::chord_name()),
             Span::styled(" │ ", Theme::status_bar()),
             Span::styled("[e] ", Theme::help_key()),
-            Span::styled("Extended: ", Theme::status_bar()),
+            Span::styled("Ext: ", Theme::status_bar()),
             Span::styled(extended_text, Theme::text()),
+            Span::styled(" │ ", Theme::status_bar()),
+            Span::styled("[s] ", Theme::help_key()),
+            Span::styled("Subs: ", Theme::status_bar()),
+            Span::styled(subs_text, Theme::text()),
             Span::styled(" │ ", Theme::status_bar()),
             Span::styled("[?] ", Theme::help_key()),
             Span::styled("Help", Theme::status_bar()),
@@ -250,8 +270,8 @@ impl App {
     }
 
     fn render_help_overlay(&self, frame: &mut Frame, area: Rect) {
-        let help_width = 40;
-        let help_height = 12;
+        let help_width = 44;
+        let help_height = 14;
         let x = (area.width.saturating_sub(help_width)) / 2;
         let y = (area.height.saturating_sub(help_height)) / 2;
 
@@ -266,6 +286,10 @@ impl App {
             Line::from(vec![
                 Span::styled("  e      ", Theme::help_key()),
                 Span::styled("Toggle extended chords", Theme::help_text()),
+            ]),
+            Line::from(vec![
+                Span::styled("  s      ", Theme::help_key()),
+                Span::styled("Toggle substitutions", Theme::help_text()),
             ]),
             Line::from(vec![
                 Span::styled("  c      ", Theme::help_key()),
@@ -340,5 +364,26 @@ mod tests {
 
         app.handle_key(KeyCode::Tab);
         assert_eq!(app.mode, Mode::Jam);
+    }
+
+    #[test]
+    fn test_substitutions_toggle() {
+        let mut app = App::new();
+        assert!(app.show_substitutions); // On by default
+
+        app.toggle_substitutions();
+        assert!(!app.show_substitutions);
+
+        app.toggle_substitutions();
+        assert!(app.show_substitutions);
+    }
+
+    #[test]
+    fn test_handle_key_subs() {
+        let mut app = App::new();
+        assert!(app.show_substitutions);
+
+        app.handle_key(KeyCode::Char('s'));
+        assert!(!app.show_substitutions);
     }
 }
