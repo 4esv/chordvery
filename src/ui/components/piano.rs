@@ -8,6 +8,8 @@ const BLACK_KEY_PATTERN: [bool; 12] = [
     false, true, false, true, false, false, true, false, true, false, true, false,
 ];
 
+const MAX_KEY_WIDTH: usize = 8;
+
 pub struct Piano {
     start_midi: u8,
     num_keys: usize,
@@ -73,13 +75,18 @@ impl Widget for Piano {
         }
 
         let white_keys = self.white_key_count();
-        let key_width = (area.width as usize / white_keys).max(2);
+        let natural_width = area.width as usize / white_keys;
+        let key_width = natural_width.clamp(2, MAX_KEY_WIDTH);
         let black_key_width = key_width.saturating_sub(1).max(1);
+
+        // Calculate centering offset
+        let actual_piano_width = key_width * white_keys;
+        let offset_x = (area.width as usize - actual_piano_width) / 2;
 
         let piano_height = area.height.min(6);
         let black_key_height = (piano_height * 3 / 5).max(2);
 
-        let mut white_key_x = area.x;
+        let mut white_key_x = area.x + offset_x as u16;
 
         for midi in self.start_midi..self.start_midi + self.num_keys as u8 {
             if Self::is_black_key(midi) {
@@ -97,15 +104,16 @@ impl Widget for Piano {
                 Theme::white_key()
             };
 
+            let piano_end_x = area.x + offset_x as u16 + actual_piano_width as u16;
             for y in area.y..area.y + piano_height {
                 for x in white_key_x..white_key_x + key_width as u16 {
-                    if x < area.x + area.width {
+                    if x < piano_end_x {
                         buf.set_string(x, y, " ", style);
                     }
                 }
             }
 
-            if white_key_x + key_width as u16 <= area.x + area.width {
+            if white_key_x + key_width as u16 <= piano_end_x {
                 for y in area.y..area.y + piano_height {
                     buf.set_string(white_key_x + key_width as u16 - 1, y, "│", Theme::border());
                 }
@@ -114,7 +122,7 @@ impl Widget for Piano {
             white_key_x += key_width as u16;
         }
 
-        white_key_x = area.x;
+        white_key_x = area.x + offset_x as u16;
 
         for midi in self.start_midi..self.start_midi + self.num_keys as u8 {
             if Self::is_black_key(midi) {
@@ -136,9 +144,11 @@ impl Widget for Piano {
                     Theme::black_key()
                 };
 
+                let piano_start_x = area.x + offset_x as u16;
+                let piano_end_x = piano_start_x + actual_piano_width as u16;
                 for y in area.y..area.y + black_key_height {
                     for x in black_x..black_x + black_key_width as u16 {
-                        if x < area.x + area.width && x >= area.x {
+                        if x < piano_end_x && x >= piano_start_x {
                             buf.set_string(x, y, " ", style);
                         }
                     }

@@ -104,4 +104,12 @@ impl Theme {
     pub fn help_text() -> Style {
         Style::default().fg(Color::White)
     }
+
+    pub fn substitution_label() -> Style {
+        Style::default().fg(Color::Cyan)
+    }
+
+    pub fn substitution_chord() -> Style {
+        Style::default().fg(Color::LightBlue)
+    }
 }

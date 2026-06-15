@@ -5,11 +5,13 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::theory::ProgressionNode;
+use crate::theory::{ProgressionNode, Substitution};
 use crate::ui::theme::Theme;
 
 pub struct ChordTree {
     root: Option<ProgressionNode>,
+    substitutions: Vec<Substitution>,
+    show_substitutions: bool,
     depth: usize,
 }
 
@@ -23,12 +25,24 @@ impl ChordTree {
     pub fn new() -> Self {
         Self {
             root: None,
+            substitutions: Vec::new(),
+            show_substitutions: false,
             depth: 2,
         }
     }
 
     pub fn root(mut self, node: ProgressionNode) -> Self {
         self.root = Some(node);
+        self
+    }
+
+    pub fn substitutions(mut self, subs: Vec<Substitution>) -> Self {
+        self.substitutions = subs;
+        self
+    }
+
+    pub fn show_substitutions(mut self, show: bool) -> Self {
+        self.show_substitutions = show;
         self
     }
 
@@ -44,7 +58,18 @@ impl ChordTree {
             return;
         };
 
-        let center_y = area.y + area.height / 2;
+        // Calculate vertical space needed
+        let progression_lines = 5; // Current chord plus 2 levels of suggestions
+        let sub_lines = if self.show_substitutions {
+            self.substitutions.len().min(4) // Show max 4 substitutions
+        } else {
+            0
+        };
+
+        let total_lines = progression_lines + sub_lines + if sub_lines > 0 { 1 } else { 0 };
+        let start_y = area.y + (area.height.saturating_sub(total_lines as u16)) / 2;
+
+        let center_y = start_y + 2; // Center the progression tree
         let col_width = area.width / 4;
 
         let current_x = area.x + 1;
@@ -110,6 +135,35 @@ impl ChordTree {
                         buf.set_string(rl_x + 3, rr_y, &rr_name, Theme::tree_surprise());
                     }
                 }
+            }
+        }
+
+        // Render substitutions below the tree
+        if self.show_substitutions && !self.substitutions.is_empty() {
+            let sub_start_y = center_y + 3;
+
+            // Separator line
+            if sub_start_y < area.y + area.height {
+                let sep = "─".repeat((area.width as usize).saturating_sub(2));
+                buf.set_string(area.x + 1, sub_start_y, &sep, Theme::text_dim());
+            }
+
+            for (i, sub) in self.substitutions.iter().take(4).enumerate() {
+                let y = sub_start_y + 1 + i as u16;
+                if y >= area.y + area.height {
+                    break;
+                }
+
+                let label = format!("[{}]", sub.name);
+                let chord_name = sub.chord.name();
+
+                buf.set_string(area.x + 2, y, &label, Theme::substitution_label());
+                buf.set_string(
+                    area.x + 2 + label.len() as u16 + 1,
+                    y,
+                    &chord_name,
+                    Theme::substitution_chord(),
+                );
             }
         }
     }
