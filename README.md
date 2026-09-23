@@ -1,6 +1,6 @@
 # Chordvery
 
-A TUI chord discovery tool with MIDI input, binary tree progression suggestions, and piano keyboard visualization.
+A terminal app that names the chords you play on a MIDI keyboard, maps expected and surprising next chords as a binary tree, and shows the keys you're pressing on a piano display.
 
 ## Features
 
